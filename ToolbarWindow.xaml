@@ -78,7 +78,8 @@
         </Style>
     </Window.Resources>
 
-    <Border Background="#E6202124" CornerRadius="8" Padding="4">
+    <Border Background="#E6202124" CornerRadius="8" Padding="4"
+            HorizontalAlignment="Left" VerticalAlignment="Top">
         <StackPanel Width="36">
             <Border x:Name="Grip" Height="12" Background="Transparent" Cursor="SizeAll" ToolTip="Dra for å flytte">
                 <TextBlock Text="• • •" Foreground="#88FFFFFF" FontSize="8" HorizontalAlignment="Center" VerticalAlignment="Center" />

@@ -61,10 +61,12 @@ public partial class ToolbarWindow : Window
         PreviewKeyDown += (_, e) => app.HandleKey(e);
         Loaded += (_, _) =>
         {
+            FitToContent();
             var area = SystemParameters.WorkArea;
             Left = area.Left + 16;
             Top = area.Top + (area.Height - ActualHeight) / 2;
         };
+        DpiChanged += (_, _) => Dispatcher.InvokeAsync(FitToContent);
 
         app.State.Changed += Apply;
         Apply();
@@ -80,6 +82,17 @@ public partial class ToolbarWindow : Window
             _collapsed = value;
             ApplyCollapsed();
         }
+    }
+
+    /// <summary>
+    /// The first SizeToContent pass (and one after a DPI change) can leave the window
+    /// larger than its content; toggling it forces WPF to measure and resize again.
+    /// </summary>
+    void FitToContent()
+    {
+        SizeToContent = SizeToContent.Manual;
+        SizeToContent = SizeToContent.WidthAndHeight;
+        UpdateLayout();
     }
 
     void ApplyCollapsed()
