@@ -1,0 +1,14 @@
+<Window x:Class="InkOverlay.OverlayWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="InkOverlay"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        Topmost="True">
+    <!-- Alpha 1 keeps the layered window hit-testable while drawing; it is invisible to the eye. -->
+    <InkCanvas x:Name="InkLayer" Background="#01000000" />
+</Window>
