@@ -1,0 +1,105 @@
+# Builds, signs (SignPath) and publishes a release to GitHub Releases.
+# Run it from the Actions tab: "Release" → "Run workflow" → enter the version.
+# Signing is skipped until the repository variable SIGNPATH_ORGANIZATION_ID and the secret
+# SIGNPATH_API_TOKEN are set; the artifact configurations are in .signpath/.
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versjon, f.eks. 1.0.1 (må være høyere enn forrige release)'
+        required: true
+
+permissions:
+  contents: write   # vpk upload creates the release
+  actions: read     # SignPath downloads the uploaded artifacts
+
+env:
+  VERSION: ${{ inputs.version }}
+  REPO_URL: https://github.com/${{ github.repository }}
+  SIGN: ${{ vars.SIGNPATH_ORGANIZATION_ID != '' }}
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      # Keep equal to the Velopack package version in InkOverlay.csproj.
+      - run: dotnet tool install -g vpk --version 1.2.161
+
+      - run: dotnet publish -c Release -r win-x64 --self-contained "-p:Version=$env:VERSION" -o publish
+
+      # 1. Sign our own binaries before packing, so the installed app is signed too.
+      - name: Upload unsigned app
+        id: upload-app
+        if: env.SIGN == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: app-unsigned
+          path: |
+            publish/InkOverlay.exe
+            publish/InkOverlay.dll
+
+      - name: Sign app
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: InkOverlay
+          signing-policy-slug: release-signing
+          artifact-configuration-slug: app
+          github-artifact-id: ${{ steps.upload-app.outputs.artifact-id }}
+          parameters: |
+            version: "${{ inputs.version }}"
+          # Release signing waits for a manual approval in SignPath.
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signed-app
+
+      - name: Use signed app
+        if: env.SIGN == 'true'
+        run: Copy-Item signed-app\* publish -Force
+
+      # 2. Pack. The previous release lets vpk build a delta update; it is missing on the first release.
+      - run: vpk download github --repoUrl $env:REPO_URL --token "${{ secrets.GITHUB_TOKEN }}" -o Releases
+        continue-on-error: true
+
+      - run: >-
+          vpk pack --packId InkOverlay --packVersion $env:VERSION --packDir publish
+          --mainExe InkOverlay.exe --packTitle InkOverlay --icon Assets\InkOverlay.ico -o Releases
+
+      # 3. Sign the installer people download, which is what SmartScreen checks.
+      - name: Upload unsigned installer
+        id: upload-setup
+        if: env.SIGN == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: setup-unsigned
+          path: Releases/InkOverlay-win-Setup.exe
+
+      - name: Sign installer
+        if: env.SIGN == 'true'
+        uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: InkOverlay
+          signing-policy-slug: release-signing
+          artifact-configuration-slug: setup
+          github-artifact-id: ${{ steps.upload-setup.outputs.artifact-id }}
+          wait-for-completion-timeout-in-seconds: 3600
+          output-artifact-directory: signed-setup
+
+      - name: Use signed installer
+        if: env.SIGN == 'true'
+        run: Copy-Item signed-setup\InkOverlay-win-Setup.exe Releases -Force
+
+      - run: >-
+          vpk upload github --repoUrl $env:REPO_URL --token "${{ secrets.GITHUB_TOKEN }}" -o Releases
+          --publish --tag "v$env:VERSION" --releaseName "InkOverlay $env:VERSION"

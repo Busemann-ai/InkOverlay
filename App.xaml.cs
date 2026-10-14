@@ -36,6 +36,9 @@ public partial class App : Application
 
         base.OnStartup(e);
 
+        // Asked before the topmost overlays exist, so the dialog cannot end up behind them.
+        if (Program.IsFirstRun) AskAutostart();
+
         _settings = Settings.Load();
         State.Color = _settings.GetColor();
         State.Size = _settings.Size;
@@ -143,6 +146,15 @@ public partial class App : Application
         if (_toolbar is null) return;
         if (_toolbar.IsVisible) HideToolbar();
         else _toolbar.Show();
+    }
+
+    static void AskAutostart()
+    {
+        var answer = MessageBox.Show(
+            "Vil du at InkOverlay skal starte automatisk når du logger på Windows?\n\n" +
+            "Du kan endre dette senere under «Start med Windows» i menyen i statusfeltet.",
+            "InkOverlay", MessageBoxButton.YesNo, MessageBoxImage.Question);
+        if (answer == MessageBoxResult.Yes) Autostart.Enable();
     }
 
     public void ToggleAutostart()

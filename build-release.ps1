@@ -1,10 +1,9 @@
-# Builds Releases\InkOverlay-win-Setup.exe with Velopack, and optionally publishes it to GitHub Releases.
+# Builds an unsigned Releases\InkOverlay-win-Setup.exe with Velopack, for testing locally.
+# Real releases are built, signed and published by .github/workflows/release.yml.
 #   .\build-release.ps1 -Version 1.0.1
-#   .\build-release.ps1 -Version 1.0.1 -Publish
-# Needs: dotnet tool install -g vpk. Publishing uses $env:GITHUB_TOKEN, or the token from `gh auth login`.
+# Needs: dotnet tool install -g vpk. Uses $env:GITHUB_TOKEN, or the token from `gh auth login`, if present.
 param(
-    [Parameter(Mandatory)] [string] $Version,
-    [switch] $Publish
+    [Parameter(Mandatory)] [string] $Version
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,11 +31,5 @@ $pack = @('pack', '--packId', 'InkOverlay', '--packVersion', $Version, '--packDi
           '--mainExe', 'InkOverlay.exe', '--packTitle', 'InkOverlay', '-o', 'Releases')
 if (Test-Path $icon) { $pack += @('--icon', $icon) }
 Invoke-Checked vpk @pack
-
-if ($Publish) {
-    if (-not $token) { throw 'No GitHub token: set $env:GITHUB_TOKEN or run gh auth login.' }
-    Invoke-Checked vpk upload github --repoUrl $repoUrl --token $token -o Releases --publish `
-        --tag "v$Version" --releaseName "InkOverlay $Version"
-}
 
 Write-Host "Ferdig: Releases\InkOverlay-win-Setup.exe ($Version)"

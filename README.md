@@ -1,6 +1,6 @@
 # InkOverlay
 
-Et lite skjermtegneverktøy for Windows (inspirert av Epic Pen), bygget med C#, WPF og .NET 10.
+Et lite skjermtegneverktøy for Windows, bygget med C#, WPF og .NET 10.
 
 ## Installer
 
@@ -8,10 +8,11 @@ Last ned `InkOverlay-win-Setup.exe` fra [Releases](https://github.com/Busemann-a
 og kjør den. Den installerer bare for deg (ingen adminrettigheter) til `%LocalAppData%\InkOverlay`,
 legger InkOverlay i Start-menyen og starter appen. Avinstaller fra **Innstillinger → Apper**.
 
-Programmet er ikke kodesignert, så Windows SmartScreen kan advare første gang: velg
-**Mer info → Kjør likevel**.
+Versjoner som ikke er kodesignert ennå (se [Kodesignering](#code-signing-policy)) kan gi en
+advarsel fra Windows SmartScreen første gang: velg **Mer info → Kjør likevel**.
 
-- **Start med Windows** er slått på etter installasjon. Slå det av/på i menyen i statusfeltet.
+- **Start med Windows**: første gang appen starter etter installasjon, spør den om den skal
+  starte automatisk. Slå det av/på senere i menyen i statusfeltet.
 - **Oppdateringer**: ved oppstart sjekker appen GitHub Releases og laster ned en ny versjon i
   bakgrunnen; den tas i bruk neste gang appen starter. «Se etter oppdateringer» i menyen
   oppdaterer og starter på nytt med en gang.
@@ -60,14 +61,15 @@ valgt, og huskes til neste oppstart.
 
 ## Lag en ny versjon
 
-Engangsoppsett: `dotnet tool install -g vpk` og `gh auth login`.
+Releaser bygges, signeres og publiseres av GitHub Actions: **Actions → Release → Run workflow**,
+og skriv inn versjonen. Signeringen må godkjennes i SignPath før releasen publiseres.
+Versjonsnummeret må være høyere enn forrige publiserte versjon for at installerte kopier skal oppdatere seg.
+
+For å teste en usignert Setup.exe lokalt (engangsoppsett: `dotnet tool install -g vpk`):
 
 ```powershell
 .\build-release.ps1 -Version 1.0.1            # bygger Releases\InkOverlay-win-Setup.exe
-.\build-release.ps1 -Version 1.0.1 -Publish   # ... og publiserer den på GitHub Releases
 ```
-
-Versjonsnummeret må være høyere enn forrige publiserte versjon for at installerte kopier skal oppdatere seg.
 
 ## Ikon
 
@@ -90,10 +92,38 @@ Det brukes for exe-filen, Setup.exe, Start-menyen og statusfeltet. Bytt ut filen
 | `Settings.cs` | Farge og størrelse i `%AppData%\InkOverlay\settings.json` |
 | `Autostart.cs` | «Start med Windows» via `HKCU\...\CurrentVersion\Run` |
 | `Updater.cs` | Oppdateringer fra GitHub Releases (Velopack) |
-| `build-release.ps1` | Bygger Setup.exe og publiserer en release |
+| `build-release.ps1` | Bygger Setup.exe lokalt |
+| `.github/workflows/release.yml` | Bygger, signerer og publiserer en release |
+| `.signpath/` | Artefaktkonfigurasjoner for SignPath |
 
 ## Begrensninger i MVP
 
 - Hvis skjermoppsettet endres mens appen kjører, må den startes på nytt.
 - Tegningen lagres ikke mellom økter.
 - Ingen figurer, tekst, whiteboard eller skjermbilder ennå. Det er neste trinn.
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io/), certificate by
+[SignPath Foundation](https://signpath.org/).
+
+Bare filer som er bygget av [release-workflowen](.github/workflows/release.yml) fra kildekoden i
+dette repoet, blir signert, og hver release godkjennes manuelt før den signeres.
+
+| Rolle | Medlemmer |
+|---|---|
+| Committers og reviewers | [Busemann-ai](https://github.com/Busemann-ai) |
+| Approvers | [Busemann-ai](https://github.com/Busemann-ai) |
+
+## Personvern
+
+InkOverlay samler ikke inn data og sender ingenting om deg eller det du tegner. Den eneste
+nettverkstrafikken er oppdateringssjekken: ved oppstart, og når du velger «Se etter oppdateringer»,
+henter appen listen over releaser fra GitHub (`github.com/Busemann-ai/InkOverlay`) og laster ned en
+eventuell ny versjon derfra. GitHub ser da IP-adressen din, som ved ethvert besøk; se
+[GitHubs personvernerklæring](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement).
+Innstillingene lagres bare lokalt i `%AppData%\InkOverlay\settings.json`.
+
+## Lisens
+
+[MIT](LICENSE)

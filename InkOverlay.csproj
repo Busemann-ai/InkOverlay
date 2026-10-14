@@ -12,8 +12,14 @@
     <AssemblyName>InkOverlay</AssemblyName>
     <!-- WPF app: DPI awareness belongs in app.manifest; this WinForms analyzer targets WinForms apps. -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
-    <!-- Overridden by build-release.ps1 with -p:Version=... -->
+    <!-- Overridden by build-release.ps1 and the release workflow with -p:Version=... -->
     <Version>1.0.0</Version>
+    <!-- SignPath checks the file metadata: product name = project name, product version = release version
+         (so no "+commit" suffix). -->
+    <Product>InkOverlay</Product>
+    <Authors>Busemann-ai</Authors>
+    <Copyright>Copyright (c) 2026 Busemann-ai</Copyright>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="Exists('Assets\InkOverlay.ico')">
