@@ -12,11 +12,31 @@
     <AssemblyName>InkOverlay</AssemblyName>
     <!-- WPF app: DPI awareness belongs in app.manifest; this WinForms analyzer targets WinForms apps. -->
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
+    <!-- Overridden by build-release.ps1 with -p:Version=... -->
+    <Version>1.0.0</Version>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="Exists('Assets\InkOverlay.ico')">
+    <ApplicationIcon>Assets\InkOverlay.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- Bedre penn-/stylus-støtte via WM_POINTER (samme switch som Epic Pen slår på). -->
     <RuntimeHostConfigurationOption Include="Switch.System.Windows.Input.Stylus.EnablePointerSupport" Value="true" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Program.Main runs Velopack's hooks before WPF starts, so App.xaml is not the entry point. -->
+    <ApplicationDefinition Remove="App.xaml" />
+    <Page Include="App.xaml" />
+  </ItemGroup>
+
+  <ItemGroup Condition="Exists('Assets\InkOverlay.ico')">
+    <EmbeddedResource Include="Assets\InkOverlay.ico" LogicalName="InkOverlay.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="1.2.161" />
   </ItemGroup>
 
 </Project>

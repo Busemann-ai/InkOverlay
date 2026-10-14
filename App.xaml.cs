@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Velopack;
 using Forms = System.Windows.Forms;
 
 namespace InkOverlay;
@@ -21,6 +23,7 @@ public partial class App : Application
 
     public AppState State { get; } = new();
     public UndoManager UndoManager { get; } = new();
+    public Updater Updater { get; } = new();
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -64,24 +67,38 @@ public partial class App : Application
         Register(ModifierKeys.Control | ModifierKeys.Shift, Key.Y, "Ctrl+Shift+Y", ToggleToolbar);
         if (failed.Count > 0)
             _tray.ShowInfo("Hurtigtaster i bruk av et annet program: " + string.Join(", ", failed));
+
+        _ = DownloadUpdateInBackground();
+    }
+
+    async Task DownloadUpdateInBackground()
+    {
+        // VelopackApp in Program.Main applies a downloaded update on the next start.
+        var info = await Updater.DownloadAsync(throwOnError: false);
+        if (info is not null)
+            _tray?.ShowInfo($"Versjon {info.TargetFullRelease.Version} er lastet ned og tas i bruk neste gang InkOverlay starter.");
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
         if (_ownsMutex)
         {
-            _settings.Color = State.Color.ToString();
-            _settings.Size = State.Size;
-            _settings.FadeSeconds = State.FadeSeconds;
-            _settings.ToolbarCollapsed = _toolbar?.IsCollapsed ?? false;
-            _settings.Save();
-
+            SaveSettings();
             _hotkeys?.Dispose();
             _tray?.Dispose();
             _mutex?.ReleaseMutex();
         }
         _mutex?.Dispose();
         base.OnExit(e);
+    }
+
+    void SaveSettings()
+    {
+        _settings.Color = State.Color.ToString();
+        _settings.Size = State.Size;
+        _settings.FadeSeconds = State.FadeSeconds;
+        _settings.ToolbarCollapsed = _toolbar?.IsCollapsed ?? false;
+        _settings.Save();
     }
 
     public void ToggleDraw()
@@ -126,6 +143,34 @@ public partial class App : Application
         if (_toolbar is null) return;
         if (_toolbar.IsVisible) HideToolbar();
         else _toolbar.Show();
+    }
+
+    public void ToggleAutostart()
+    {
+        if (Autostart.IsEnabled) Autostart.Disable();
+        else Autostart.Enable();
+    }
+
+    public async void CheckForUpdates()
+    {
+        UpdateInfo? info;
+        try
+        {
+            info = await Updater.DownloadAsync(throwOnError: true);
+        }
+        catch (System.Exception)
+        {
+            _tray?.ShowInfo("Fant ikke ut om det finnes en ny versjon. Sjekk nettforbindelsen og prøv igjen.");
+            return;
+        }
+        if (info is null)
+        {
+            _tray?.ShowInfo($"Du har nyeste versjon ({Updater.Version}).");
+            return;
+        }
+        // ApplyUpdatesAndRestart exits the process without running OnExit.
+        SaveSettings();
+        Updater.ApplyAndRestart(info);
     }
 
     public void Quit() => Shutdown();

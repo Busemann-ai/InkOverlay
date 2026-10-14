@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Drawing;
 using Forms = System.Windows.Forms;
 
 namespace InkOverlay;
@@ -29,12 +30,22 @@ public sealed class TrayIcon : IDisposable
         };
         menu.Items.Add(fade);
         menu.Items.Add(new Forms.ToolStripSeparator());
+        // Only offered when installed, so a dotnet run copy never registers itself.
+        if (app.Updater.IsInstalled)
+        {
+            var autostart = new Forms.ToolStripMenuItem("Start med Windows");
+            autostart.Click += (_, _) => app.ToggleAutostart();
+            menu.Opening += (_, _) => autostart.Checked = Autostart.IsEnabled;
+            menu.Items.Add(autostart);
+            menu.Items.Add("Se etter oppdateringer", null, (_, _) => app.CheckForUpdates());
+            menu.Items.Add(new Forms.ToolStripSeparator());
+        }
         menu.Items.Add("Avslutt", null, (_, _) => app.Quit());
 
         _icon = new Forms.NotifyIcon
         {
-            Icon = System.Drawing.SystemIcons.Application,
-            Text = "InkOverlay",
+            Icon = LoadIcon(),
+            Text = $"InkOverlay {app.Updater.Version}",
             ContextMenuStrip = menu,
             Visible = true,
         };
@@ -42,6 +53,13 @@ public sealed class TrayIcon : IDisposable
         {
             if (e.Button == Forms.MouseButtons.Left) app.ToggleDraw();
         };
+    }
+
+    static Icon LoadIcon()
+    {
+        // Embedded only when Assets\InkOverlay.ico exists at build time.
+        using var stream = typeof(TrayIcon).Assembly.GetManifestResourceStream("InkOverlay.ico");
+        return stream is null ? SystemIcons.Application : new Icon(stream, Forms.SystemInformation.SmallIconSize);
     }
 
     public void ShowInfo(string text) =>
