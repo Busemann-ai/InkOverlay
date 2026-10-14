@@ -19,7 +19,7 @@ public partial class OverlayWindow : Window
     public OverlayWindow(System.Drawing.Rectangle bounds, App app)
     {
         InitializeComponent();
-        _bounds = bounds;
+        _bounds = Native.InsetForAutoHideTaskbars(bounds);
         _app = app;
 
         var undo = app.UndoManager;

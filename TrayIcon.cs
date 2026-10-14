@@ -40,6 +40,7 @@ public sealed class TrayIcon : IDisposable
             menu.Items.Add("Se etter oppdateringer", null, (_, _) => app.CheckForUpdates());
             menu.Items.Add(new Forms.ToolStripSeparator());
         }
+        menu.Items.Add("Om InkOverlay", null, (_, _) => app.ShowAbout());
         menu.Items.Add("Avslutt", null, (_, _) => app.Quit());
 
         _icon = new Forms.NotifyIcon

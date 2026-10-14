@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -71,7 +72,19 @@ public partial class App : Application
         if (failed.Count > 0)
             _tray.ShowInfo("Hurtigtaster i bruk av et annet program: " + string.Join(", ", failed));
 
+        ConfirmUpdate();
         _ = DownloadUpdateInBackground();
+    }
+
+    /// <summary>Tells the user once when a new version runs for the first time after an update.</summary>
+    void ConfirmUpdate()
+    {
+        if (!Updater.IsInstalled || _settings.LastVersion == Updater.Version) return;
+        _settings.LastVersion = Updater.Version;
+        // Saved right away, so the message is not repeated if the process ends without OnExit.
+        SaveSettings();
+        if (!Program.IsFirstRun)
+            _tray?.ShowInfo($"InkOverlay er oppdatert til versjon {Updater.Version}.");
     }
 
     async Task DownloadUpdateInBackground()
@@ -183,6 +196,21 @@ public partial class App : Application
         // ApplyUpdatesAndRestart exits the process without running OnExit.
         SaveSettings();
         Updater.ApplyAndRestart(info);
+    }
+
+    public void ShowAbout()
+    {
+        var text = $"InkOverlay {Updater.Version}\n\n";
+        if (Updater.InstalledAt is { } installed)
+            text += "Sist installert eller oppdatert: " +
+                installed.ToString("d. MMMM yyyy 'kl.' HH:mm", CultureInfo.GetCultureInfo("nb-NO")) + "\n";
+        else if (!Updater.IsInstalled)
+            text += "Kjører fra kildekoden (ikke installert).\n";
+        if (Updater.PendingVersion is { } pending)
+            text += $"Versjon {pending} er lastet ned og tas i bruk neste gang InkOverlay starter.\n";
+        text += "\ngithub.com/Busemann-ai/InkOverlay";
+        // Owned by the primary overlay so the dialog stays above the topmost overlays.
+        MessageBox.Show(_overlays[0], text, "Om InkOverlay", MessageBoxButton.OK, MessageBoxImage.Information);
     }
 
     public void Quit() => Shutdown();

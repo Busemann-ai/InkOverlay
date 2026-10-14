@@ -15,7 +15,9 @@ advarsel fra Windows SmartScreen første gang: velg **Mer info → Kjør likevel
   starte automatisk. Slå det av/på senere i menyen i statusfeltet.
 - **Oppdateringer**: ved oppstart sjekker appen GitHub Releases og laster ned en ny versjon i
   bakgrunnen; den tas i bruk neste gang appen starter. «Se etter oppdateringer» i menyen
-  oppdaterer og starter på nytt med en gang.
+  oppdaterer og starter på nytt med en gang. Første gang en ny versjon starter, får du en melding
+  om at den er oppdatert. **Om InkOverlay** i menyen viser hvilken versjon du har og når den sist
+  ble installert eller oppdatert.
 
 ## Kjør fra kildekoden
 
@@ -98,7 +100,8 @@ Det brukes for exe-filen, Setup.exe, Start-menyen og statusfeltet. Bytt ut filen
 
 ## Begrensninger i MVP
 
-- Hvis skjermoppsettet endres mens appen kjører, må den startes på nytt.
+- Hvis skjermoppsettet endres mens appen kjører, må den startes på nytt. Det gjelder også om du slår
+  automatisk skjuling av oppgavelinjen av eller på.
 - Tegningen lagres ikke mellom økter.
 - Ingen figurer, tekst, whiteboard eller skjermbilder ennå. Det er neste trinn.
 

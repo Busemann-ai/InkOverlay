@@ -11,6 +11,8 @@ public sealed class Settings
     public double Size { get; set; } = 4;
     public int FadeSeconds { get; set; }
     public bool ToolbarCollapsed { get; set; }
+    /// <summary>The installed version that last ran, to tell the user when an update has been applied.</summary>
+    public string? LastVersion { get; set; }
 
     static string FilePath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "InkOverlay", "settings.json");
