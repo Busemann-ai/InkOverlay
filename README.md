@@ -71,8 +71,8 @@ Versjonsnummeret må være høyere enn forrige publiserte versjon for at install
 
 ## Ikon
 
-Legg ikonet i `Assets\InkOverlay.ico` (helst med 16, 24, 32, 48 og 256 px i samme fil) og bygg på nytt.
-Det brukes da for exe-filen, Setup.exe, Start-menyen og statusfeltet. Uten filen brukes Windows sitt standardikon.
+Ikonet ligger i `Assets\InkOverlay.ico` (16–256 px i samme fil), med kilden i `Assets\InkOverlay.svg`.
+Det brukes for exe-filen, Setup.exe, Start-menyen og statusfeltet. Bytt ut filen og bygg på nytt for å endre det.
 
 ## Oppbygning
 
