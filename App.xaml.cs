@@ -92,8 +92,11 @@ public partial class App : Application
         // VelopackApp in Program.Main applies a downloaded update on the next start.
         var info = await Updater.DownloadAsync(throwOnError: false);
         if (info is not null)
-            _tray?.ShowInfo($"Versjon {info.TargetFullRelease.Version} er lastet ned og tas i bruk neste gang InkOverlay starter.");
+            _tray?.ShowInfo(PendingUpdateMessage(info.TargetFullRelease.Version.ToString()));
     }
+
+    static string PendingUpdateMessage(string version) =>
+        $"Versjon {version} er lastet ned og tas i bruk neste gang InkOverlay starter.";
 
     protected override void OnExit(ExitEventArgs e)
     {
@@ -207,7 +210,7 @@ public partial class App : Application
         else if (!Updater.IsInstalled)
             text += "Kjører fra kildekoden (ikke installert).\n";
         if (Updater.PendingVersion is { } pending)
-            text += $"Versjon {pending} er lastet ned og tas i bruk neste gang InkOverlay starter.\n";
+            text += PendingUpdateMessage(pending) + "\n";
         text += "\ngithub.com/Busemann-ai/InkOverlay";
         // Owned by the primary overlay so the dialog stays above the topmost overlays.
         MessageBox.Show(_overlays[0], text, "Om InkOverlay", MessageBoxButton.OK, MessageBoxImage.Information);
